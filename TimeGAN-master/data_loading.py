@@ -37,65 +37,40 @@ def MinMaxScaler(data):
   denominator = np.max(data, 0) - np.min(data, 0)
   norm_data = numerator / (denominator + 1e-7)
   return norm_data
+    
 
-
-def sine_data_generation (no, seq_len, dim):
-  """Sine data generation.
+def MinMaxScaler(data):
+  """Min Max normalizer.
   
   Args:
-    - no: the number of samples
-    - seq_len: sequence length of the time-series
-    - dim: feature dimensions
-    
+    - data: original data
+  
   Returns:
-    - data: generated data
-  """  
-  # Initialize the output
-  data = list()
+    - norm_data: normalized data
+  """
+  numerator = data - np.min(data, 0)
+  denominator = np.max(data, 0) - np.min(data, 0)
+  norm_data = numerator / (denominator + 1e-7)
+  return norm_data
 
-  # Generate sine data
-  for i in range(no):      
-    # Initialize each time-series
-    temp = list()
-    # For each feature
-    for k in range(dim):
-      # Randomly drawn frequency and phase
-      freq = np.random.uniform(0, 0.1)            
-      phase = np.random.uniform(0, 0.1)
-          
-      # Generate sine signal based on the drawn frequency and phase
-      temp_data = [np.sin(freq * j + phase) for j in range(seq_len)] 
-      temp.append(temp_data)
-        
-    # Align row/column
-    temp = np.transpose(np.asarray(temp))        
-    # Normalize to [0,1]
-    temp = (temp + 1)*0.5
-    # Stack the generated data
-    data.append(temp)
-                
-  return data
-    
 
 def real_data_loading (data_name, seq_len):
-  """Load and preprocess real-world datasets.
+  """Load and preprocess NILM appliance datasets.
   
   Args:
-    - data_name: stock or energy
+    - data_name: appliance name (e.g., fridge, dishwasher, kettle, microwave, washingmachine)
     - seq_len: sequence length
     
   Returns:
     - data: preprocessed data.
   """  
-  assert data_name in ['stock','energy']
+  appliance_names = ['fridge', 'dishwasher', 'kettle', 'microwave', 'washingmachine']
+  assert data_name in appliance_names, f"Unknown appliance: {data_name}. Available: {appliance_names}"
   
-  if data_name == 'stock':
-    ori_data = np.loadtxt('data/stock_data.csv', delimiter = ",",skiprows = 1)
-  elif data_name == 'energy':
-    ori_data = np.loadtxt('data/energy_data.csv', delimiter = ",",skiprows = 1)
+  file_path = f'data/{data_name}_multivariate.csv'
+  # Load CSV (skipping header)
+  ori_data = np.loadtxt(file_path, delimiter = ",", skiprows = 1)
         
-  # Flip the data to make chronological data
-  ori_data = ori_data[::-1]
   # Normalize the data
   ori_data = MinMaxScaler(ori_data)
     

@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore")
 # 1. TimeGAN model
 from timegan import timegan
 # 2. Data loading
-from data_loading import real_data_loading, sine_data_generation
+from data_loading import real_data_loading
 # 3. Metrics
 from metrics.discriminative_metrics import discriminative_score_metrics
 from metrics.predictive_metrics import predictive_score_metrics
@@ -42,12 +42,12 @@ from metrics.visualization_metrics import visualization
 
 
 def main (args):
-  """Main function for timeGAN experiments.
+  """Main function for timeGAN experiments on NILM data.
   
   Args:
-    - data_name: sine, stock, or energy
+    - data_name: fridge, dishwasher, kettle, microwave, washingmachine
     - seq_len: sequence length
-    - Network parameters (should be optimized for different datasets)
+    - Network parameters:
       - module: gru, lstm, or lstmLN
       - hidden_dim: hidden dimensions
       - num_layer: number of layers
@@ -61,12 +61,7 @@ def main (args):
     - metric_results: discriminative and predictive scores
   """
   ## Data loading
-  if args.data_name in ['stock', 'energy']:
-    ori_data = real_data_loading(args.data_name, args.seq_len)
-  elif args.data_name == 'sine':
-    # Set number of samples and its dimensions
-    no, dim = 10000, 5
-    ori_data = sine_data_generation(no, args.seq_len, dim)
+  ori_data = real_data_loading(args.data_name, args.seq_len)
     
   print(args.data_name + ' dataset is ready.')
     
@@ -109,6 +104,18 @@ def main (args):
   ## Print discriminative and predictive scores
   print(metric_results)
 
+  ## Save generated data
+  import os
+  if not os.path.exists('results'):
+    os.makedirs('results')
+  
+  filename = f'results/{args.data_name}_synthetic_data.npy'
+  # Convert generated_data (list of arrays) to a padded 3D array or list as needed
+  # TimeGAN returns a list of variable-length arrays ifori_time was variable.
+  # Here we use fixed seq_len so it should be consistent.
+  np.save(filename, np.asarray(generated_data))
+  print(f'Saved generated data to {filename}')
+
   return ori_data, generated_data, metric_results
 
 
@@ -118,8 +125,8 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
       '--data_name',
-      choices=['sine','stock','energy'],
-      default='stock',
+      choices=['fridge','dishwasher','kettle','microwave','washingmachine'],
+      default='fridge',
       type=str)
   parser.add_argument(
       '--seq_len',
