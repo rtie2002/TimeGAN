@@ -21,12 +21,12 @@ main_timegan.py
   - Predictive score
 """
 
-import os
-os.environ['TF_USE_LEGACY_KERAS'] = '1'
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+import os
+os.environ['TF_USE_LEGACY_KERAS'] = '1'
 
 import argparse
 import numpy as np
