@@ -17,6 +17,8 @@ Note: Use Post-hoc RNN to predict one-step ahead (last feature)
 """
 
 # Necessary Packages
+import os
+os.environ['TF_USE_LEGACY_KERAS'] = '1'
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 import numpy as np
