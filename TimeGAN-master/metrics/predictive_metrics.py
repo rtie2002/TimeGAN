@@ -17,7 +17,8 @@ Note: Use Post-hoc RNN to predict one-step ahead (last feature)
 """
 
 # Necessary Packages
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 from sklearn.metrics import mean_absolute_error
 from utils import extract_time
@@ -70,9 +71,9 @@ def predictive_score_metrics (ori_data, generated_data):
     with tf.variable_scope("predictor", reuse = tf.AUTO_REUSE) as vs:
       p_cell = tf.nn.rnn_cell.GRUCell(num_units=hidden_dim, activation=tf.nn.tanh, name = 'p_cell')
       p_outputs, p_last_states = tf.nn.dynamic_rnn(p_cell, x, dtype=tf.float32, sequence_length = t)
-      y_hat_logit = tf.contrib.layers.fully_connected(p_outputs, 1, activation_fn=None) 
+      y_hat_logit = tf.layers.dense(p_outputs, 1, activation=None) 
       y_hat = tf.nn.sigmoid(y_hat_logit)
-      p_vars = [v for v in tf.all_variables() if v.name.startswith(vs.name)]
+      p_vars = [v for v in tf.global_variables() if v.name.startswith(vs.name)]
     
     return y_hat, p_vars
     
