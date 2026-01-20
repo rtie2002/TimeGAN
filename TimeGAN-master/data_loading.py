@@ -67,7 +67,12 @@ def real_data_loading (data_name, seq_len):
   appliance_names = ['fridge', 'dishwasher', 'kettle', 'microwave', 'washingmachine']
   assert data_name in appliance_names, f"Unknown appliance: {data_name}. Available: {appliance_names}"
   
-  file_path = f'data/{data_name}_multivariate.csv'
+  import os
+  # Get the directory where this script is located
+  script_dir = os.path.dirname(os.path.abspath(__file__))
+  file_path = os.path.join(script_dir, 'data', f'{data_name}_multivariate.csv')
+  
+  print(f"Loading data from: {file_path}")
   # Load CSV (skipping header)
   ori_data = np.loadtxt(file_path, delimiter = ",", skiprows = 1)
         
