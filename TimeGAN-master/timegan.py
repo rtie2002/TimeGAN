@@ -291,13 +291,22 @@ def timegan (ori_data, parameters):
   print('Finish Joint Training')
     
   ## Synthetic data generation
-  Z_mb = random_generator(no, z_dim, ori_time, max_seq_len)
-  generated_data_curr = sess.run(X_hat, feed_dict={Z: Z_mb, X: ori_data, T: ori_time})    
+  sample_multiplier = parameters.get('sample_multiplier', 1)
+  gen_no = no * sample_multiplier
+  print(f"Sampling {gen_no} sequences (Multiplier: {sample_multiplier}x)")
+  
+  # Extend T (time information) to match the new sample number
+  curr_ori_time = np.array(ori_time)
+  gen_time = np.tile(curr_ori_time, sample_multiplier)
+  
+  Z_mb = random_generator(gen_no, z_dim, gen_time, max_seq_len)
+  # Run the generator only (X is not needed for generation, but we provide placeholder-sized dummy if needed by graph)
+  generated_data_curr = sess.run(X_hat, feed_dict={Z: Z_mb, T: gen_time})    
     
   generated_data = list()
     
-  for i in range(no):
-    temp = generated_data_curr[i,:ori_time[i],:]
+  for i in range(gen_no):
+    temp = generated_data_curr[i,:gen_time[i],:]
     generated_data.append(temp)
         
   # Renormalization

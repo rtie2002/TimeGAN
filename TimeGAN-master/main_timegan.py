@@ -73,6 +73,7 @@ def main (args):
   parameters['num_layer'] = args.num_layer
   parameters['iterations'] = args.iteration
   parameters['batch_size'] = args.batch_size
+  parameters['sample_multiplier'] = args.sample_multiplier
       
   generated_data = timegan(ori_data, parameters)   
   print('Finish Synthetic Data Generation')
@@ -157,6 +158,11 @@ if __name__ == '__main__':
       '--batch_size',
       help='the number of samples in mini-batch (should be optimized)',
       default=128,
+      type=int)
+  parser.add_argument(
+      '--sample_multiplier',
+      help='how many times of real data to sample (e.g. 2 for 200%)',
+      default=2,
       type=int)
   parser.add_argument(
       '--metric_iteration',

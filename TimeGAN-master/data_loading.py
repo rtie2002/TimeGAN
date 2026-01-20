@@ -76,8 +76,8 @@ def real_data_loading (data_name, seq_len):
     
   # Preprocess the dataset
   temp_data = []    
-  # Cut data by sequence length
-  for i in range(0, len(ori_data) - seq_len):
+  # Cut data by sequence length (Using non-overlapping windows to match data length)
+  for i in range(0, len(ori_data) - seq_len, seq_len):
     _x = ori_data[i:i + seq_len]
     temp_data.append(_x)
         
