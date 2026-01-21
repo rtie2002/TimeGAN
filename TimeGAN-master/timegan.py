@@ -19,6 +19,8 @@ Note: Use original data as training set to generater synthetic data (time-series
 # Necessary Packages
 import os
 os.environ['TF_USE_LEGACY_KERAS'] = '1'
+# FIX: Prevent RTX 4090 compatibility crash with legacy TF
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 import numpy as np
@@ -224,7 +226,12 @@ def timegan (ori_data, parameters):
   GS_solver = tf.train.AdamOptimizer().minimize(G_loss_S, var_list = g_vars + s_vars)   
         
   ## TimeGAN training   
-  sess = tf.Session()
+  # FIX: Memory growth configuration to avoid GEMM crash on 4090
+  config = tf.ConfigProto()
+  config.gpu_options.allow_growth = True
+  config.gpu_options.per_process_gpu_memory_fraction = 0.9 # Optional: Cap memory if needed
+  
+  sess = tf.Session(config=config)
   sess.run(tf.global_variables_initializer())
     
   # 1. Embedding network training
