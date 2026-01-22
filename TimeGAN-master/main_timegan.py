@@ -76,6 +76,7 @@ def main (args):
   parameters['iterations'] = args.iteration
   parameters['batch_size'] = args.batch_size
   parameters['sample_multiplier'] = args.sample_multiplier
+  parameters['data_name'] = args.data_name
       
   generated_data = timegan(ori_data, parameters)   
   print('Finish Synthetic Data Generation')

@@ -233,71 +233,116 @@ def timegan (ori_data, parameters):
   
   sess = tf.Session(config=config)
   sess.run(tf.global_variables_initializer())
+  
+  # Checkpoint Manager
+  saver = tf.train.Saver()
+  checkpoint_dir = f"./checkpoints/{parameters.get('data_name', 'default')}"
+  os.makedirs(checkpoint_dir, exist_ok=True)
+  
+  # Try to restore existing checkpoint
+  ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+  if ckpt and ckpt.model_checkpoint_path:
+    try:
+      saver.restore(sess, ckpt.model_checkpoint_path)
+      print(f"✓ Restored model weights from {ckpt.model_checkpoint_path}")
+    except:
+      print("⚠ Could not restore checkpoint, starting from scratch.")
     
   # 1. Embedding network training
   print('Start Embedding Network Training')
-    
-  for itt in range(iterations):
-    # Set mini-batch
-    X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)           
-    # Train embedder        
-    _, step_e_loss = sess.run([E0_solver, E_loss_T0], feed_dict={X: X_mb, T: T_mb})        
-    # Checkpoint
-    if itt % 100 == 0:
-      print('step: '+ str(itt) + '/' + str(iterations) + ', e_loss: ' + str(np.round(np.sqrt(step_e_loss),4)), flush=True) 
+  
+  phase1_marker = os.path.join(checkpoint_dir, "phase1_done.txt")
+  if os.path.exists(phase1_marker):
+    print("✓ Phase 1 already completed, skipping.")
+  else:
+    for itt in range(iterations):
+      # Set mini-batch
+      X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)           
+      # Train embedder        
+      _, step_e_loss = sess.run([E0_solver, E_loss_T0], feed_dict={X: X_mb, T: T_mb})        
+      # Checkpoint
+      if itt % 100 == 0:
+        print('step: '+ str(itt) + '/' + str(iterations) + ', e_loss: ' + str(np.round(np.sqrt(step_e_loss),4)), flush=True) 
+      
+      if itt % 1000 == 0 and itt > 0:
+        saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=itt)
+
+    with open(phase1_marker, "w") as f: f.write("done")
+    saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=iterations)
       
   print('Finish Embedding Network Training')
     
   # 2. Training only with supervised loss
   print('Start Training with Supervised Loss Only')
-    
-  for itt in range(iterations):
-    # Set mini-batch
-    X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)    
-    # Random vector generation   
-    Z_mb = random_generator(batch_size, z_dim, T_mb, max_seq_len)
-    # Train generator       
-    _, step_g_loss_s = sess.run([GS_solver, G_loss_S], feed_dict={Z: Z_mb, X: X_mb, T: T_mb})       
-    # Checkpoint
-    if itt % 100 == 0:
-      print('step: '+ str(itt)  + '/' + str(iterations) +', s_loss: ' + str(np.round(np.sqrt(step_g_loss_s),4)), flush=True)
+  
+  phase2_marker = os.path.join(checkpoint_dir, "phase2_done.txt")
+  if os.path.exists(phase2_marker):
+    print("✓ Phase 2 already completed, skipping.")
+  else:
+    for itt in range(iterations):
+      # Set mini-batch
+      X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)    
+      # Random vector generation   
+      Z_mb = random_generator(batch_size, z_dim, T_mb, max_seq_len)
+      # Train generator       
+      _, step_g_loss_s = sess.run([GS_solver, G_loss_S], feed_dict={Z: Z_mb, X: X_mb, T: T_mb})       
+      # Checkpoint
+      if itt % 100 == 0:
+        print('step: '+ str(itt)  + '/' + str(iterations) +', s_loss: ' + str(np.round(np.sqrt(step_g_loss_s),4)), flush=True)
+
+      if itt % 1000 == 0 and itt > 0:
+        saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=itt + iterations)
+        
+    with open(phase2_marker, "w") as f: f.write("done")
+    saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=2*iterations)
       
   print('Finish Training with Supervised Loss Only')
     
   # 3. Joint Training
   print('Start Joint Training')
   
-  for itt in range(iterations):
-    # Generator training (twice more than discriminator training)
-    for kk in range(2):
+  phase3_marker = os.path.join(checkpoint_dir, "phase3_done.txt")
+  if os.path.exists(phase3_marker):
+    print("✓ Phase 3 already completed, skipping.")
+  else:
+    for itt in range(iterations):
+      # Generator training (twice more than discriminator training)
+      for kk in range(2):
+        # Set mini-batch
+        X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)               
+        # Random vector generation
+        Z_mb = random_generator(batch_size, z_dim, T_mb, max_seq_len)
+        # Train generator
+        _, step_g_loss_u, step_g_loss_s, step_g_loss_v = sess.run([G_solver, G_loss_U, G_loss_S, G_loss_V], feed_dict={Z: Z_mb, X: X_mb, T: T_mb})
+         # Train embedder        
+        _, step_e_loss_t0 = sess.run([E_solver, E_loss_T0], feed_dict={Z: Z_mb, X: X_mb, T: T_mb})   
+             
+      # Discriminator training        
       # Set mini-batch
-      X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)               
+      X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)           
       # Random vector generation
       Z_mb = random_generator(batch_size, z_dim, T_mb, max_seq_len)
-      # Train generator
-      _, step_g_loss_u, step_g_loss_s, step_g_loss_v = sess.run([G_solver, G_loss_U, G_loss_S, G_loss_V], feed_dict={Z: Z_mb, X: X_mb, T: T_mb})
-       # Train embedder        
-      _, step_e_loss_t0 = sess.run([E_solver, E_loss_T0], feed_dict={Z: Z_mb, X: X_mb, T: T_mb})   
-           
-    # Discriminator training        
-    # Set mini-batch
-    X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)           
-    # Random vector generation
-    Z_mb = random_generator(batch_size, z_dim, T_mb, max_seq_len)
-    # Check discriminator loss before updating
-    check_d_loss = sess.run(D_loss, feed_dict={X: X_mb, T: T_mb, Z: Z_mb})
-    # Train discriminator (only when the discriminator does not work well)
-    if (check_d_loss > 0.15):        
-      _, step_d_loss = sess.run([D_solver, D_loss], feed_dict={X: X_mb, T: T_mb, Z: Z_mb})
-        
-    # Print multiple checkpoints
-    if itt % 100 == 0:
-      print('step: '+ str(itt) + '/' + str(iterations) + 
-            ', d_loss: ' + str(np.round(step_d_loss,4)) + 
-            ', g_loss_u: ' + str(np.round(step_g_loss_u,4)) + 
-            ', g_loss_s: ' + str(np.round(np.sqrt(step_g_loss_s),4)) + 
-            ', g_loss_v: ' + str(np.round(step_g_loss_v,4)) + 
-            ', e_loss_t0: ' + str(np.round(np.sqrt(step_e_loss_t0),4)), flush=True)
+      # Check discriminator loss before updating
+      check_d_loss = sess.run(D_loss, feed_dict={X: X_mb, T: T_mb, Z: Z_mb})
+      # Train discriminator (only when the discriminator does not work well)
+      if (check_d_loss > 0.15):        
+        _, step_d_loss = sess.run([D_solver, D_loss], feed_dict={X: X_mb, T: T_mb, Z: Z_mb})
+          
+      # Print multiple checkpoints
+      if itt % 100 == 0:
+        print('step: '+ str(itt) + '/' + str(iterations) + 
+              ', d_loss: ' + str(np.round(step_d_loss,4)) + 
+              ', g_loss_u: ' + str(np.round(step_g_loss_u,4)) + 
+              ', g_loss_s: ' + str(np.round(np.sqrt(step_g_loss_s),4)) + 
+              ', g_loss_v: ' + str(np.round(step_g_loss_v,4)) + 
+              ', e_loss_t0: ' + str(np.round(np.sqrt(step_e_loss_t0),4)), flush=True)
+
+      if itt % 500 == 0 and itt > 0:
+        saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=itt + 2*iterations)
+
+    with open(phase3_marker, "w") as f: f.write("done")
+    saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=3*iterations)
+
   print('Finish Joint Training')
     
   ## Synthetic data generation
