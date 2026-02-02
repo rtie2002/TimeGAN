@@ -4,8 +4,9 @@
 # You can modify these lists or override variables
 APPLIANCES=("fridge" "microwave" "kettle" "dishwasher" "washingmachine")
 ITERATION=20000
+JOINT_ITERATION=5000
 SEQ_LEN=128
-BATCH_SIZE=4096
+BATCH_SIZE=128
 
 # Stop on error is not default in bash, but we can check status codes manually or use set -e
 # set -e 
@@ -22,6 +23,7 @@ echo -e "${CYAN}   TimeGAN Automation: Train & Sample (Linux/WSL)${NC}"
 echo -e "${CYAN}====================================================${NC}"
 echo "Appliances: ${APPLIANCES[*]}"
 echo "Iterations: $ITERATION"
+echo "Joint Iterations: $JOINT_ITERATION"
 echo "Sequence Length: $SEQ_LEN"
 echo "Batch Size: $BATCH_SIZE"
 echo -e "${CYAN}====================================================${NC}"
@@ -34,7 +36,7 @@ for app in "${APPLIANCES[@]}"; do
     echo -e "\n${YELLOW}>>> Processing Appliance: [${app^^}]${NC}"
     
     # Construct command string for display
-    CMD="python main_timegan.py --data_name $app --iteration $ITERATION --seq_len $SEQ_LEN --batch_size $BATCH_SIZE"
+    CMD="python main_timegan.py --data_name $app --iteration $ITERATION --joint_iteration $JOINT_ITERATION --seq_len $SEQ_LEN --batch_size $BATCH_SIZE"
     
     echo -e "${GRAY}Running: $CMD${NC}"
     
@@ -42,6 +44,7 @@ for app in "${APPLIANCES[@]}"; do
     python main_timegan.py \
         --data_name "$app" \
         --iteration "$ITERATION" \
+        --joint_iteration "$JOINT_ITERATION" \
         --seq_len "$SEQ_LEN" \
         --batch_size "$BATCH_SIZE"
     
