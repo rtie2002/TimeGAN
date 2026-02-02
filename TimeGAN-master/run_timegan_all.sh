@@ -2,7 +2,7 @@
 
 # Parameters
 # You can modify these lists or override variables
-APPLIANCES=("microwave" "fridge" "microwave" "kettle" "dishwasher" "washingmachine")
+APPLIANCES=("fridge" "microwave" "microwave" "kettle" "dishwasher" "washingmachine")
 ITERATION=20000
 JOINT_ITERATION=5000
 SEQ_LEN=128
