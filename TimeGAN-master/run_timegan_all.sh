@@ -36,7 +36,7 @@ for app in "${APPLIANCES[@]}"; do
     echo -e "\n${YELLOW}>>> Processing Appliance: [${app^^}]${NC}"
     
     # Construct command string for display
-    CMD="python main_timegan.py --data_name $app --iteration $ITERATION --joint_iteration $JOINT_ITERATION --seq_len $SEQ_LEN --batch_size $BATCH_SIZE"
+    CMD="python main_timegan.py --data_name $app --iteration $ITERATION --joint_iteration $JOINT_ITERATION --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --hidden_dim 64"
     
     echo -e "${GRAY}Running: $CMD${NC}"
     
@@ -46,7 +46,8 @@ for app in "${APPLIANCES[@]}"; do
         --iteration "$ITERATION" \
         --joint_iteration "$JOINT_ITERATION" \
         --seq_len "$SEQ_LEN" \
-        --batch_size "$BATCH_SIZE"
+        --batch_size "$BATCH_SIZE" \
+        --hidden_dim 64
     
     EXIT_CODE=$?
     

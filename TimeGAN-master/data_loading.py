@@ -55,37 +55,29 @@ def real_data_loading (data_name, seq_len):
   import os
   # Get the directory where this script is located
   script_dir = os.path.dirname(os.path.abspath(__file__))
-  file_path = os.path.join(script_dir, 'data', f'{data_name}_multivariate.csv')
+  file_path = os.path.join(script_dir, 'data', f'{data_name}_training_.csv')
   
   if not os.path.exists(file_path):
       # Try looking in a relative data folder if script_dir doesn't work
-      file_path = os.path.join(script_dir, '..', 'data', f'{data_name}_multivariate.csv')
+      file_path = os.path.join(script_dir, '..', 'data', f'{data_name}_training_.csv')
   
   print(f"Loading data from: {file_path}")
   # Load CSV (skipping header)
   ori_data = np.loadtxt(file_path, delimiter = ",", skiprows = 1)
         
-  # Normalize the data
-  ori_data = MinMaxScaler(ori_data)
+  # Normalize the data - REMOVED because timegan.py handles this and needs the raw values for correct restoration
+  # ori_data = MinMaxScaler(ori_data)
     
   # Preprocess the dataset
   temp_data = []    
   # Cut data by sequence length
   # OPTIMIZATION: Discard "empty" windows to boost generation density
   # 0.05 means 5% of max power (since data is MinMax normalized 0-1)
-  activity_threshold = 0.05 
-  skipped_count = 0
-  
   for i in range(0, len(ori_data) - seq_len, seq_len):
     _x = ori_data[i:i + seq_len]
-    
-    # First column [:, 0] is appliance power
-    if np.max(_x[:, 0]) > activity_threshold:
-      temp_data.append(_x)
-    else:
-      skipped_count += 1
+    temp_data.append(_x)
   
-  print(f"  Data Loader: Kept {len(temp_data)} active windows, skipped {skipped_count} empty windows.")
+  print(f"  Data Loader: Loaded {len(temp_data)} windows (Full Dataset).")
         
   # Mix the datasets (to make it similar to i.i.d)
   idx = np.random.permutation(len(temp_data))    
