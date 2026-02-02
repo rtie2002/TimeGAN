@@ -304,7 +304,8 @@ def timegan (ori_data, parameters):
   if os.path.exists(phase3_marker):
     print("✓ Phase 3 already completed, skipping.")
   else:
-    pbar3 = tqdm(range(iterations), desc='Phase 3: Joint')
+    joint_iterations = parameters.get('joint_iterations', iterations)
+    pbar3 = tqdm(range(joint_iterations), desc='Phase 3: Joint')
     for itt in pbar3:
       # Generator training (twice more than discriminator training)
       for kk in range(2):

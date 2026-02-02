@@ -74,6 +74,7 @@ def main (args):
   parameters['hidden_dim'] = args.hidden_dim
   parameters['num_layer'] = args.num_layer
   parameters['iterations'] = args.iteration
+  parameters['joint_iterations'] = args.joint_iteration
   parameters['batch_size'] = args.batch_size
   parameters['sample_multiplier'] = args.sample_multiplier
   parameters['data_name'] = args.data_name
@@ -158,6 +159,11 @@ if __name__ == '__main__':
       '--iteration',
       help='Training iterations (should be optimized)',
       default=50000,
+      type=int)
+  parser.add_argument(
+      '--joint_iteration',
+      help='Training iterations for Joint Phase (expensive)',
+      default=5000,
       type=int)
   parser.add_argument(
       '--batch_size',
