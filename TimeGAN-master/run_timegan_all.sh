@@ -3,7 +3,7 @@
 # Parameters
 # You can modify these lists or override variables
 APPLIANCES=("fridge" "microwave" "kettle" "dishwasher" "washingmachine")
-ITERATION=5000
+ITERATION=20000
 SEQ_LEN=128
 BATCH_SIZE=2048
 
