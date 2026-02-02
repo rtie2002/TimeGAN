@@ -87,8 +87,14 @@ def main (args):
   
   # 1. Discriminative Score
   discriminative_score = list()
+  
+  # Ensure sizes match for metrics
+  min_len = min(len(ori_data), len(generated_data))
+  ori_data_metric = ori_data[:min_len]
+  generated_data_metric = generated_data[:min_len]
+  
   for _ in range(args.metric_iteration):
-    temp_disc = discriminative_score_metrics(ori_data, generated_data)
+    temp_disc = discriminative_score_metrics(ori_data_metric, generated_data_metric)
     discriminative_score.append(temp_disc)
       
   metric_results['discriminative'] = np.mean(discriminative_score)
@@ -96,7 +102,7 @@ def main (args):
   # 2. Predictive score
   predictive_score = list()
   for tt in range(args.metric_iteration):
-    temp_pred = predictive_score_metrics(ori_data, generated_data)
+    temp_pred = predictive_score_metrics(ori_data_metric, generated_data_metric)
     predictive_score.append(temp_pred)   
       
   metric_results['predictive'] = np.mean(predictive_score)     
