@@ -2,11 +2,11 @@
 
 # Parameters
 # You can modify these lists or override variables
-APPLIANCES=("fridge" "microwave" "kettle" "dishwasher" "washingmachine")
+APPLIANCES=("microwave" "fridge" "microwave" "kettle" "dishwasher" "washingmachine")
 ITERATION=20000
 JOINT_ITERATION=5000
 SEQ_LEN=128
-BATCH_SIZE=128
+BATCH_SIZE=512
 
 # Stop on error is not default in bash, but we can check status codes manually or use set -e
 # set -e 
