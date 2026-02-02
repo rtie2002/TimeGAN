@@ -87,14 +87,8 @@ def main (args):
   
   # 1. Discriminative Score
   discriminative_score = list()
-  
-  # Ensure sizes match for metrics
-  min_len = min(len(ori_data), len(generated_data))
-  ori_data_metric = ori_data[:min_len]
-  generated_data_metric = generated_data[:min_len]
-  
   for _ in range(args.metric_iteration):
-    temp_disc = discriminative_score_metrics(ori_data_metric, generated_data_metric)
+    temp_disc = discriminative_score_metrics(ori_data, generated_data)
     discriminative_score.append(temp_disc)
       
   metric_results['discriminative'] = np.mean(discriminative_score)
@@ -102,7 +96,7 @@ def main (args):
   # 2. Predictive score
   predictive_score = list()
   for tt in range(args.metric_iteration):
-    temp_pred = predictive_score_metrics(ori_data_metric, generated_data_metric)
+    temp_pred = predictive_score_metrics(ori_data, generated_data)
     predictive_score.append(temp_pred)   
       
   metric_results['predictive'] = np.mean(predictive_score)     
@@ -125,6 +119,52 @@ def main (args):
   # Here we use fixed seq_len so it should be consistent.
   np.save(filename, np.asarray(generated_data))
   print(f'Saved generated data to {filename}')
+
+  ## Performance metrics (RUN AFTER SAVING)
+  print("Starting Metrics Calculation (this may take time)...")
+  
+  # Output initialization
+  metric_results = dict()
+  
+  # 1. Discriminative Score
+  discriminative_score = list()
+  
+  # Ensure sizes match for metrics
+  min_len = min(len(ori_data), len(generated_data))
+  ori_data_metric = ori_data[:min_len]
+  generated_data_metric = generated_data[:min_len]
+  
+  try:
+      # 1. Discriminative Score
+      for i in range(args.metric_iteration):
+        temp_disc = discriminative_score_metrics(ori_data_metric, generated_data_metric)
+        discriminative_score.append(temp_disc)
+        print(f'[Metric] Discriminative Score Iter {i+1}/{args.metric_iteration}: {temp_disc:.4f}')
+          
+      metric_results['discriminative'] = np.mean(discriminative_score)
+          
+      # 2. Predictive score
+      predictive_score = list()
+      for tt in range(args.metric_iteration):
+        temp_pred = predictive_score_metrics(ori_data_metric, generated_data_metric)
+        predictive_score.append(temp_pred)
+        print(f'[Metric] Predictive Score Iter {tt+1}/{args.metric_iteration}: {temp_pred:.4f}')
+          
+      metric_results['predictive'] = np.mean(predictive_score)     
+      
+      print('Final Average Scores:', metric_results)
+
+      # 3. Visualization (PCA and tSNE)
+      # Subsample for visualization to avoid crash
+      vis_idx = np.random.permutation(min_len)[:2000]
+      visualization(ori_data[vis_idx], np.asarray(generated_data)[vis_idx], 'pca')
+      visualization(ori_data[vis_idx], np.asarray(generated_data)[vis_idx], 'tsne')
+      
+  except Exception as e:
+      print(f"Warning: Metrics calculation failed: {e}")
+      print("Skipping metrics, but data is already saved.")
+
+  return ori_data, generated_data, metric_results
 
   return ori_data, generated_data, metric_results
 
