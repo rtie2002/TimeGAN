@@ -4,8 +4,8 @@
 # You can modify these lists or override variables
 APPLIANCES=("fridge" "microwave" "kettle" "dishwasher" "washingmachine")
 ITERATION=5000
-SEQ_LEN=128
-BATCH_SIZE=256
+SEQ_LEN=512
+BATCH_SIZE=512
 
 # Stop on error is not default in bash, but we can check status codes manually or use set -e
 # set -e 

@@ -25,6 +25,7 @@ import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 import numpy as np
 from utils import extract_time, rnn_cell, random_generator, batch_generator
+from tqdm import tqdm
 
 
 def timegan (ori_data, parameters):
@@ -255,14 +256,11 @@ def timegan (ori_data, parameters):
   if os.path.exists(phase1_marker):
     print("✓ Phase 1 already completed, skipping.")
   else:
-    for itt in range(iterations):
+    for itt in tqdm(range(iterations), desc='Phase 1: Embedding'):
       # Set mini-batch
       X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)           
       # Train embedder        
       _, step_e_loss = sess.run([E0_solver, E_loss_T0], feed_dict={X: X_mb, T: T_mb})        
-      # Checkpoint
-      if itt % 100 == 0:
-        print('step: '+ str(itt) + '/' + str(iterations) + ', e_loss: ' + str(np.round(np.sqrt(step_e_loss),4)), flush=True) 
       
       if itt % 1000 == 0 and itt > 0:
         saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=itt)
@@ -279,16 +277,17 @@ def timegan (ori_data, parameters):
   if os.path.exists(phase2_marker):
     print("✓ Phase 2 already completed, skipping.")
   else:
-    for itt in range(iterations):
+    pbar2 = tqdm(range(iterations), desc='Phase 2: Supervised')
+    for itt in pbar2:
       # Set mini-batch
       X_mb, T_mb = batch_generator(ori_data, ori_time, batch_size)    
       # Random vector generation   
       Z_mb = random_generator(batch_size, z_dim, T_mb, max_seq_len)
       # Train generator       
       _, step_g_loss_s = sess.run([GS_solver, G_loss_S], feed_dict={Z: Z_mb, X: X_mb, T: T_mb})       
-      # Checkpoint
-      if itt % 100 == 0:
-        print('step: '+ str(itt)  + '/' + str(iterations) +', s_loss: ' + str(np.round(np.sqrt(step_g_loss_s),4)), flush=True)
+      
+      if itt % 10 == 0:
+         pbar2.set_postfix(s_loss=np.round(np.sqrt(step_g_loss_s), 4))
 
       if itt % 1000 == 0 and itt > 0:
         saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=itt + iterations)
@@ -305,7 +304,8 @@ def timegan (ori_data, parameters):
   if os.path.exists(phase3_marker):
     print("✓ Phase 3 already completed, skipping.")
   else:
-    for itt in range(iterations):
+    pbar3 = tqdm(range(iterations), desc='Phase 3: Joint')
+    for itt in pbar3:
       # Generator training (twice more than discriminator training)
       for kk in range(2):
         # Set mini-batch
@@ -328,14 +328,15 @@ def timegan (ori_data, parameters):
       if (check_d_loss > 0.15):        
         _, step_d_loss = sess.run([D_solver, D_loss], feed_dict={X: X_mb, T: T_mb, Z: Z_mb})
           
-      # Print multiple checkpoints
-      if itt % 100 == 0:
-        print('step: '+ str(itt) + '/' + str(iterations) + 
-              ', d_loss: ' + str(np.round(step_d_loss,4)) + 
-              ', g_loss_u: ' + str(np.round(step_g_loss_u,4)) + 
-              ', g_loss_s: ' + str(np.round(np.sqrt(step_g_loss_s),4)) + 
-              ', g_loss_v: ' + str(np.round(step_g_loss_v,4)) + 
-              ', e_loss_t0: ' + str(np.round(np.sqrt(step_e_loss_t0),4)), flush=True)
+      # Update progress bar
+      if itt % 10 == 0:
+         pbar3.set_postfix(
+             d_loss=np.round(step_d_loss, 4),
+             g_loss_u=np.round(step_g_loss_u, 4),
+             g_loss_s=np.round(np.sqrt(step_g_loss_s), 4),
+             g_loss_v=np.round(step_g_loss_v, 4),
+             e_loss=np.round(np.sqrt(step_e_loss_t0), 4)
+         )
 
       if itt % 500 == 0 and itt > 0:
         saver.save(sess, os.path.join(checkpoint_dir, "model.ckpt"), global_step=itt + 2*iterations)
