@@ -5,7 +5,7 @@
 APPLIANCES=("fridge" "microwave" "kettle" "dishwasher" "washingmachine")
 ITERATION=20000
 SEQ_LEN=128
-BATCH_SIZE=2048
+BATCH_SIZE=4096
 
 # Stop on error is not default in bash, but we can check status codes manually or use set -e
 # set -e 
