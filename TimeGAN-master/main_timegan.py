@@ -121,6 +121,7 @@ def main (args):
   np.save(filename, np.asarray(generated_data))
   print(f'Saved generated data to {filename}')
 
+  metric_results = {}
   return ori_data, generated_data, metric_results
 
 
