@@ -64,6 +64,15 @@ def real_data_loading (data_name, seq_len):
   print(f"Loading data from: {file_path}")
   # Load CSV (skipping header)
   ori_data = np.loadtxt(file_path, delimiter = ",", skiprows = 1)
+  
+  # SKIP the first column (aggregate) if it exists (Total 10 columns -> Keep last 9)
+  if ori_data.shape[1] == 10:
+      print(f"  Note: Detected 10 columns. Dropping 'aggregate' column to keep 9 features.")
+      ori_data = ori_data[:, 1:]
+  elif ori_data.shape[1] == 9:
+      print(f"  Note: Already 9 columns. Proceeding.")
+  else:
+      print(f"  Warning: Unexpected column count {ori_data.shape[1]}. Proceeding with all.")
         
   # Normalize the data - REMOVED because timegan.py handles this and needs the raw values for correct restoration
   # ori_data = MinMaxScaler(ori_data)
